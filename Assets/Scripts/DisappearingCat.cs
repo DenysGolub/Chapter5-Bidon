@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -10,14 +11,23 @@ public class DisappearingCat : MonoBehaviour
     private bool isPlaying = false;
 
     public AudioSource audioSource;
+    public static event Action onCatDestroy;
+
+    public ParticleSystem destroyEffect;
+
     void Start()
     {
         animator = GetComponent<Animator>();
     }
 
+   
     void OnPointerEnter()
     {
-        if (isPlaying) return; 
+        if (isPlaying)
+        {
+            return;
+        }
+         
         float distance = Vector3.Distance(playerAim.transform.position, transform.position);
         Debug.Log(distance);
 
@@ -51,6 +61,14 @@ public class DisappearingCat : MonoBehaviour
         audioSource.Play();
         yield return new WaitForSeconds(animator.GetCurrentAnimatorClipInfo(0)[0].clip.length);
         audioSource.Pause();
+        onCatDestroy.Invoke();
+       
+        if (destroyEffect != null)
+        {
+            ParticleSystem effect = Instantiate(destroyEffect, transform.position, Quaternion.identity);
+            effect.Play();
+            Destroy(effect.gameObject, effect.main.duration);
+        }
         Destroy(gameObject);
     }
 
